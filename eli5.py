@@ -1,6 +1,7 @@
 import click
 from bs4 import BeautifulSoup
 import urllib2
+from cprint import cprint
 
 url = "http://www.reddit.com/r/explainlikeimfive/search?q={query}&restrict_sr=on&sort=top&t=all"
 
@@ -27,10 +28,23 @@ def hello(count, query):
         except ValueError:
             print("invalid value")
     response = urllib2.urlopen(results[q_nb].div.header.a['href'])
-    print(results[q_nb].div.header.a['href'])
-    # soup = BeautifulSoup(response, 'html.parser')
-    # response = soup.findAll("div", {"class": "usertext-body"})
-    # print(response[0])
+    # print(results[q_nb].div.header.a['href'])
+
+    soup = BeautifulSoup(response, 'html.parser')
+    responses = soup.findAll("div", {"class": "entry"})
+    question = responses[0].form.div.div
+    cprint.warn('\nQuestion:')
+    print(question.get_text().replace('  ', ' '))
+    i = 1
+    while i < len(responses):
+        answer = responses[i].form.div.div
+        cprint.warn('Answer:')
+        print(answer.get_text().replace('  ', ' '))
+
+        if raw_input('Would you like an other answer ? (y/N)') != 'y':
+            break
+        i += 1
 
 if __name__ == '__main__':
+    cprint.warn('Explainlikeimfive\n')
     hello()

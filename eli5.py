@@ -1,6 +1,6 @@
 import click
 from bs4 import BeautifulSoup
-import urllib2
+import requests
 from cprint import cprint
 
 url = "http://www.reddit.com/r/explainlikeimfive/search?q={query}&restrict_sr=on&sort=top&t=all"
@@ -8,27 +8,23 @@ url = "http://www.reddit.com/r/explainlikeimfive/search?q={query}&restrict_sr=on
 
 @click.command()
 @click.option('--count', default=5, help='Number questions proposed.')
-@click.option('--query', prompt='Search',
-              help='Your search.')
+@click.option('--query', prompt='Search', help='Your search.')
 def hello(count, query):
-    """Simple program that greets NAME for a total of COUNT times."""
-    response = urllib2.urlopen(url.format(query=query))
-    soup = BeautifulSoup(response, 'html.parser')
+    response = requests.get(url.replace("{query}", query))
+    soup = BeautifulSoup(response.text, 'html.parser')
     results = soup.findAll("div", {"class": "search-result"})
-    for i, r in enumerate(results):
-        if i == count:
-            break
+
+    for r in results[:count]:
         print("{nb} - {question}".format(nb=i, question=r.div.header.a.string))
     while True:
         try:
-            q_nb = int(raw_input("For which question would you like an awswer ?\n"))
+            q_nb = int(input("For which question would you like an awswer ?\n"))
             if q_nb < count:
                 break
             print("invalid value")
         except ValueError:
             print("invalid value")
-    response = urllib2.urlopen(results[q_nb].div.header.a['href'])
-    # print(results[q_nb].div.header.a['href'])
+    response = requests.get(results[q_nb].div.header.a['href'])
 
     soup = BeautifulSoup(response, 'html.parser')
     responses = soup.findAll("div", {"class": "entry"})
@@ -41,7 +37,7 @@ def hello(count, query):
         cprint.warn('Answer:')
         print(answer.get_text().replace('  ', ' '))
 
-        if raw_input('Would you like an other answer ? (y/N)') != 'y':
+        if input('Would you like an other answer ? (y/N)') != 'y':
             break
         i += 1
 
